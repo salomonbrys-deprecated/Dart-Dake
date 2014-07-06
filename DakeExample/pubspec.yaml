@@ -1,4 +1,0 @@
-name: Dake
-dependencies:
-  dake_tasks:
-    path: ../DakeTasks
