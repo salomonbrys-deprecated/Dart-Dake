@@ -32,7 +32,7 @@ You can run multiple tasks serially with the `+` symbol:
     
 ...will run all the tasks `dev:version`, `assets:minify` and `dev:server` one after the other.
 
-You can have fun with Dake in the `DakeExample` directory: an example DakeTasks.dart is given to experiment with Dake.
+You can have fun with Dake in the [`DakeExample`](https://github.com/SalomonBrys/Dart-dake/tree/master/DakeExample) directory: an example DakeTasks.dart is given to experiment with Dake.
 
 
 ## Write Dake tasks
@@ -48,7 +48,7 @@ In your `DartTasks.dart`, import the package:
     
     import 'package:dake_tasks/dake_tasks.dart';
 
-**Read the example file `DakeExample/DakeTasks.dart`. It is properly documented explains all features of the package `dake_tasks`.**
+**Read the example file [`DakeExample/DakeTasks.dart`](https://github.com/SalomonBrys/Dart-dake/blob/master/DakeExample/DakeTasks.dart). It is properly documented explains all features of the package `dake_tasks`.**
 
 Finally, once all task classes have been defined, write the main function as followed:
 
