@@ -48,8 +48,10 @@ In your `DartTasks.dart`, import the package:
     
     import 'package:dake_tasks/dake_tasks.dart';
 
-**Read the example file [`DakeExample/DakeTasks.dart`](https://github.com/SalomonBrys/Dart-dake/blob/master/DakeExample/DakeTasks.dart). It is properly documented explains all features of the package `dake_tasks`.**
+**Read the example file [`DakeExample/DakeTasks.dart`](https://github.com/SalomonBrys/Dart-dake/blob/master/DakeExample/DakeTasks.dart). It is properly documented and explains all features of the package `dake_tasks`.**
 
 Finally, once all task classes have been defined, write the main function as followed:
 
     main(args, replyTo) => DakeMain([list, of, task, classes], args, replyTo);
+
+#### [`dake_tasks` API Documentation](http://salomonbrys.github.io/Dart-dake/dartdoc/index.html#dake_tasks/dake_tasks)
