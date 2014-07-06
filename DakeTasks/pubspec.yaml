@@ -1,3 +1,8 @@
 name: dake_tasks
+version: 1.0.0
+description: Allows to define tasks to be run with dake.
+author: Salomon BRYS <salomon.brys@gmail.com>
+homepage: https://github.com/SalomonBrys/Dart-dake
+documentation: http://salomonbrys.github.io/Dart-dake/dartdoc/index.html#dake_tasks/dake_tasks
 dev_dependencies:
   unittest: ">=0.11.0+2 <0.12.0"
