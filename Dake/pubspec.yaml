@@ -1,7 +1,8 @@
 name: dake
-version: 1.0.3
+version: 1.1.0
 description: Dake task runner command line tool.
 author: Salomon BRYS <salomon.brys@gmail.com>
 homepage: https://github.com/SalomonBrys/Dart-dake
 dependencies:
   args: ">=0.11.0+1 <0.12.0"
+  path: ">=1.2.1 <2.0.0"

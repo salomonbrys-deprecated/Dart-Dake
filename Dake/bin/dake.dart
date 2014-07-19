@@ -8,6 +8,7 @@ import 'dart:isolate';
 import 'dart:async';
 
 import 'package:args/args.dart';
+import 'package:path/path.dart' as path;
 
 import 'src/tasks.dart';
 
@@ -21,6 +22,7 @@ import 'src/tasks.dart';
 void main(List<String> args) {
     var parser = new ArgParser();
     parser.addFlag('help', help: 'This help', negatable: false);
+    parser.addOption('file', abbr: 'f', help: 'The task dart file if not DakeTasks.dart');
 
     ArgResults argResult;
     try {
@@ -31,18 +33,57 @@ void main(List<String> args) {
         dakeUsage(parser);
         exit(1);
     }
-    if (argResult['help']) return dakeUsage(parser);
+    if (argResult['help'])
+        return dakeUsage(parser);
 
+    if (argResult['file'] != null) {
+        var file = new File(argResult['file']);
+        file.exists().then((exists) {
+            if (!exists) {
+                print("${argResult['file']} not found");
+                exit(1);
+            }
+            Directory.current = path.dirname(argResult['file']);
+            _start(argResult.rest, path.basename(argResult['file']));
+        });
+        return ;
+    }
+
+    _findDakeTasks().then((found) {
+        if (!found) {
+            print("No DakeTasks.dart");
+            exit(1);
+        }
+        _checkAndStart(argResult.rest, "DakeTasks.dart");
+    });
+}
+
+Future<bool> _findDakeTasks() {
+    var check;
+    check = () {
+        return new File(Directory.current.path + "/DakeTasks.dart").exists().then((exists) {
+            if (exists)
+                return true;
+            if (Directory.current.path == "/")
+                return false;
+            Directory.current = "..";
+            return check();
+        });
+    };
+    return check();
+}
+
+void _checkAndStart(List<String> args, String file) {
     if (!new Directory(Directory.current.path + "/packages").existsSync()) {
         print("No packages directory");
-        _pubget().then((_) => _main(argResult));
+        _pubget().then((_) => _start(args));
     }
     else if (!new Directory(Directory.current.path + "/packages/dake_tasks").existsSync()) {
         print("No packages/dake_tasks directory");
-        _pubget().then((_) => _main(argResult));
+        _pubget().then((_) => _start(args));
     }
     else
-        _main(argResult);
+        _start(args, file);
 }
 
 /**
@@ -79,13 +120,9 @@ Future _pubget() {
  *  3. Spawning an isolate that will run DakeTasks.dart and establishing a two way communication (SendPort/ReceivePort) with it
  *  4. Handling command line given tasks
  */
-_main(ArgResults argResult) {
+_start(List<String> args, String file) {
 
-    Uri taskFile = Uri.parse(Directory.current.path + "/DakeTasks.dart");
-    if (!(new File.fromUri(taskFile).existsSync())) {
-        print("No DakeTasks.dart");
-        exit(1);
-    }
+    Uri taskFile = Uri.parse(Directory.current.path + "/" + file);
 
     var receivePort = new ReceivePort();
 
@@ -94,7 +131,7 @@ _main(ArgResults argResult) {
         receiveStream.first
         .then((Map result) {
             SendPort sendPort = result['sendPort'];
-            return handleTasks(sendPort, receiveStream, result['tasks'], argResult.rest).then((_) => sendPort.send({}));
+            return handleTasks(sendPort, receiveStream, result['tasks'], args).then((_) => sendPort.send({}));
         })
         .then((_) => receivePort.close())
         .catchError((_) => exit(1));
