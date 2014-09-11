@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ -f $(brew --prefix)/etc/bash_completion ]; then
+    . $(brew --prefix)/etc/bash_completion
+fi
+
+_dake() {
+#	local cur=${COMP_WORDS[COMP_CWORD]}
+
+    local cur
+    _get_comp_words_by_ref -n : cur
+
+    COMPREPLY=( $(compgen -W "$(dake __completion__ $COMP_CWORD ${COMP_WORDS[@]:1})" -- "$cur") )
+
+    __ltrim_colon_completions "$cur"
+}
+
+complete -F _dake dake

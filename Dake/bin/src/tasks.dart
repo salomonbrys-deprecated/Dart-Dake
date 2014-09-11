@@ -9,6 +9,7 @@ import 'dart:math';
 import 'package:args/args.dart';
 
 import 'exec.dart';
+import 'completion.dart';
 
 /**
  * Handles all command line given tasks.
@@ -27,6 +28,8 @@ Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tas
         return new Future.value();
     }
 
+    parser.addCommand("__completion__");
+
     Future task = new Future.value();
     _splitTaskArgs(allArgs).forEach((args) => task = task.then((_) {
         ArgResults argResult;
@@ -42,6 +45,9 @@ Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tas
             print('Could not find a task named "${argResult.rest[0]}"');
             exit(1);
         }
+
+        if (argResult.command.name == "__completion__")
+            return completion(tasks, int.parse(argResult.command.rest[0]), argResult.command.rest.sublist(1));
 
         return execTask(sendPort, receiveStream, argResult.command, tasks[argResult.command.name]);
     }));
