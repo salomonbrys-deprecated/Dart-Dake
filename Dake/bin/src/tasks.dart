@@ -28,6 +28,11 @@ Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tas
         return new Future.value();
     }
 
+    if (allArgs[0] == "__completion__") {
+        completion(tasks, int.parse(allArgs[1]) - 1, allArgs.sublist(2));
+        return new Future.value();
+    }
+
     parser.addCommand("__completion__");
 
     Future task = new Future.value();
@@ -45,9 +50,6 @@ Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tas
             print('Could not find a task named "${argResult.rest[0]}"');
             exit(1);
         }
-
-        if (argResult.command.name == "__completion__")
-            return completion(tasks, int.parse(argResult.command.rest[0]), argResult.command.rest.sublist(1));
 
         return execTask(sendPort, receiveStream, argResult.command, tasks[argResult.command.name]);
     }));

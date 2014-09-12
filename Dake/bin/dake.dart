@@ -33,8 +33,10 @@ void main(List<String> args) {
         dakeUsage(parser);
         exit(1);
     }
-    if (argResult['help'])
-        return dakeUsage(parser);
+    if (argResult['help']) {
+        dakeUsage(parser);
+        return ;
+    }
 
     if (argResult['file'] != null) {
         var file = new File(argResult['file']);
@@ -76,11 +78,11 @@ Future<bool> _findDakeTasks() {
 void _checkAndStart(List<String> args, String file) {
     if (!new Directory(Directory.current.path + "/packages").existsSync()) {
         print("No packages directory");
-        _pubget().then((_) => _start(args));
+        _pubget().then((_) => _start(args, file));
     }
     else if (!new Directory(Directory.current.path + "/packages/dake_tasks").existsSync()) {
         print("No packages/dake_tasks directory");
-        _pubget().then((_) => _start(args));
+        _pubget().then((_) => _start(args, file));
     }
     else
         _start(args, file);
@@ -134,7 +136,6 @@ _start(List<String> args, String file) {
             return handleTasks(sendPort, receiveStream, result['tasks'], args).then((_) => sendPort.send({}));
         })
         .then((_) => receivePort.close())
-        .catchError((_) => exit(1));
         ;
     });
 }

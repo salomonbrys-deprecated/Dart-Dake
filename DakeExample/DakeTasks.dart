@@ -24,13 +24,21 @@ class Assets implements DakeClosable {
     // Tasks can have named arguments which are translated into command line options
     // @Param.optAbbr allows to define a abbreviated command line option
     @Task("Minify the assets")
-    minify({@Param(optAbbr: "b") bool build}) {
+    minify({@Param(optAbbr: "b") bool build, @Param(optAbbr: "o", type: "file") String output, @Param(optAbbr: "c", type: "none|gzip|lzma") String compression: "none"}) {
         var bf = new Future.value();
         if (build)
             bf = this.build();
         return bf.then((_) {
             print("Minifying assets...");
             print("OK");
+            if (compression != "none") {
+                print("Compressing using $compression...");
+                print("OK");
+            }
+            if (output != null) {
+                print("Saving to $output...");
+                print("OK");
+            }
         });
     }
 
@@ -50,7 +58,7 @@ class Development {
     // @Param.type allows to define a display type that is displayed on the help of the task.
     // @Param.desc allows to define a description of the parameter displayed on the help of the task.
     @Task("Run the server")
-    server([@Param(desc: "The port to listen to") int port, @Param(type: "adress", desc: "The address to listen to") String bind]) {
+    server([@Param(desc: "The port to listen to") int port, @Param(type: "ip", desc: "The address to listen to") String bind]) {
         return dakeRepo[Assets].build().then((_) {
             print("The server is running");
             return new Completer().future;
@@ -60,7 +68,7 @@ class Development {
     // A task can have both optional positional and named parameters.
     // Since dart does not allows this feature in the language, it is emulated with @Param.val.
     @Task("Set version name in files")
-    version(int major, @Param(val: 0) int minor, { String postfix: "" }) {
+    version(int major, @Param(val: 0) int minor, { @Param(type: "alpha|beta") String postfix: "" }) {
         if (!postfix.isEmpty)
             postfix = "-$postfix";
         print("New version is: $major.$minor$postfix");

@@ -1,18 +1,48 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ -f $(brew --prefix)/etc/bash_completion ]; then
-    . $(brew --prefix)/etc/bash_completion
+prefix=""
+
+command -v brew > /dev/null 2>&1 && prefix=$(brew --prefix)
+
+if [ -f $prefix/etc/bash_completion ]; then
+    source $prefix/etc/bash_completion
 fi
 
 _dake() {
 #	local cur=${COMP_WORDS[COMP_CWORD]}
 
     local cur
-    _get_comp_words_by_ref -n : cur
+    local words
+    local cword
+    _get_comp_words_by_ref -n : cur words cword
 
-    COMPREPLY=( $(compgen -W "$(dake __completion__ $COMP_CWORD ${COMP_WORDS[@]:1})" -- "$cur") )
+    echo "-----dake __completion__ ${cword} ${words[@]:1}-----"
 
+    result=$(dake __completion__ ${cword} ${words[@]:1})
+
+    special=$(echo "$result" | egrep "::[a-z]+::$" > /dev/null ; echo $?);
+    if [ $special == 0 ]; then
+        special=$(echo "$result" | sed "s/::\(.\+\)::/\1/g")
+        case "$special" in
+            "file")
+                _filedir
+                ;;
+            "dir")
+                _filedir -d
+                ;;
+            "ip")
+                _ip_addresses
+                ;;
+            "host")
+                _known_hosts_real "$cur"
+                ;;
+        esac
+        return 0
+    fi
+
+    COMPREPLY=( $(compgen -W "$result" -- "$cur") )
     __ltrim_colon_completions "$cur"
+    return 0
 }
 
 complete -F _dake dake
