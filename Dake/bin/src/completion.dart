@@ -12,12 +12,12 @@ class _Comp {
     String get word => (index >= args.length ? null : args[index]);
 }
 
-String _getOptionName(String option) {
+List<String> _getOptionNames(String option) {
     if (option.startsWith("--"))
-        return option.substring(2);
+        return [option.substring(2)];
     else if (option.startsWith("-"))
-        return option.substring(1);
-    return option;
+        return option.substring(1).split("");
+    return [option];
 
 }
 
@@ -59,7 +59,7 @@ Set<String> _getDefinedOptions(List<String> args) {
 }
 
 Map _getOption(List<Map> options, String name) {
-    name = _getOptionName(name);
+    name = _getOptionNames(name)[0];
     for (Map<String, dynamic> option in options) {
         if (option['name'] == name || option['optAbbr'] == name)
             return option;
@@ -89,14 +89,7 @@ Set<String> _completeOptions(List options, _Comp comp, bool zsh) {
         defined = _getDefinedOptions(comp.args);
 
     if (comp.word != null)
-        defined.remove(_getOptionName(comp.word));
-
-    bool appendAbbr = (comp.word != null && comp.word.length >= 2 && !comp.word.startsWith("--"));
-    if (appendAbbr) {
-        String type = _getOption(options, comp.word.substring(comp.word.length - 1))['type'];
-        if (type != null && type != "bool")
-            appendAbbr = false;
-    }
+        defined.removeAll(_getOptionNames(comp.word));
 
     var addResult = (String name, String desc) {
         if (!zsh || desc == null)
@@ -109,17 +102,12 @@ Set<String> _completeOptions(List options, _Comp comp, bool zsh) {
         .forEach((Map option) {
             addResult("--${option['name']}", option['help']);
             if (option["type"] == "bool")
-                addResult("--no-${option['name']}", option['help']);
+                addResult("--no-${option['name']}", option['help'] != null ? "Disables ${option['name']}" : null);
             if (option["optAbbr"] != null) {
                 addResult("-${option['optAbbr']}", option['help']);
-                if (appendAbbr && option['optAbbr'] == "bool" && !comp.word.contains(option['optAbbr']))
-                    addResult(comp.word + option['optAbbr'], option['help']);
             }
         })
     ;
-
-    if (comp.word != null && comp.word.startsWith(new RegExp(r'-[^-]')))
-        result.add(comp.word);
 
     return result;
 }
@@ -184,7 +172,7 @@ void completion(Map<String, Map> tasks, int pos, List<String> args) {
 
     bool zsh = false;
 
-    if (args[0] == "__zsh__") {
+    if (args.isNotEmpty && args[0] == "__zsh__") {
         args.removeAt(0);
         zsh = true;
     }

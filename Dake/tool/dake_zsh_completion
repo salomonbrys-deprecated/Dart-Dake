@@ -4,8 +4,6 @@ _dake() {
 
     result=$(dake __completion__ $((CURRENT - 1)) __zsh__ ${words[@]:1})
 
-    result=$(echo "$result" | sed 's/:/\\:/g')
-
     special=$(echo "$result" | egrep "::[a-z]+::$" > /dev/null ; echo $?);
 
     if [[ $special == 0 ]]; then
@@ -22,6 +20,7 @@ _dake() {
     fi
 
     if [[ "$result" != "" ]]; then
+        result=$(echo "$result" | sed 's/:/\\:/g')
         eval "_values description $result"
     fi
 }
