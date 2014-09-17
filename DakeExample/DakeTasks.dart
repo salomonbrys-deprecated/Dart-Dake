@@ -24,7 +24,7 @@ class Assets implements DakeClosable {
     // Tasks can have named arguments which are translated into command line options
     // @Param.optAbbr allows to define a abbreviated command line option
     @Task("Minify the assets")
-    minify({@Param(optAbbr: "b") bool build, @Param(optAbbr: "o", type: "file") String output, @Param(optAbbr: "c", type: "none|gzip|lzma") String compression: "none"}) {
+    minify({@Param(optAbbr: "b") bool build, @Param(optAbbr: "o", type: "file") String output, @Param(optAbbr: "c", type: "none|gzip|lzma", desc: "Compress the assets") String compression: "none"}) {
         var bf = new Future.value();
         if (build)
             bf = this.build();

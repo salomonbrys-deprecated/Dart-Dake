@@ -81,7 +81,7 @@ String _isLastOptionWaitingForValue(_Comp comp, List<Map> options) {
     return type;
 }
 
-Set<String> _completeOptions(List options, _Comp comp) {
+Set<String> _completeOptions(List options, _Comp comp, bool zsh) {
     Set<String> result = new Set<String>();
 
     Set<String> defined = new Set<String>();
@@ -98,16 +98,22 @@ Set<String> _completeOptions(List options, _Comp comp) {
             appendAbbr = false;
     }
 
+    var addResult = (String name, String desc) {
+        if (!zsh || desc == null)
+            return result.add(name);
+        result.add("'$name[$desc]'");
+    };
+
     options
         .where((Map option) => !(defined.contains(option['name']) || (option['optAbbr'] != null && defined.contains(option['optAbbr']))))
         .forEach((Map option) {
-            result.add("--${option['name']}");
+            addResult("--${option['name']}", option['help']);
             if (option["type"] == "bool")
-                result.add("--no-${option['name']}");
+                addResult("--no-${option['name']}", option['help']);
             if (option["optAbbr"] != null) {
-                result.add("-${option['optAbbr']}");
+                addResult("-${option['optAbbr']}", option['help']);
                 if (appendAbbr && option['optAbbr'] == "bool" && !comp.word.contains(option['optAbbr']))
-                    result.add(comp.word + option['optAbbr']);
+                    addResult(comp.word + option['optAbbr'], option['help']);
             }
         })
     ;
@@ -121,7 +127,7 @@ Set<String> _completeOptions(List options, _Comp comp) {
 void _printArgType(String valueType) {
     if (valueType == "filedir" || valueType == "path")
         valueType = "file";
-    if (["ip", "host", "file", "dir"].contains(valueType))
+    if (["file", "dir"].contains(valueType))
         return print("::$valueType::");
 
     if (valueType.contains("|"))
@@ -160,12 +166,32 @@ int _paramIndex(List<String> args, List<Map> options, int index) {
     return ret;
 }
 
+Iterable<String> _taskNames(Map<String, Map> tasks, bool zsh) {
+    if (!zsh)
+        return tasks.keys;
+
+    return tasks.keys.map((name) {
+        String help = tasks[name]['help'];
+        if (help != null) {
+            return "'$name[$help]'";
+        }
+        return name;
+    });
+}
+
 void completion(Map<String, Map> tasks, int pos, List<String> args) {
     Set<String> result = new Set<String>();
 
+    bool zsh = false;
+
+    if (args[0] == "__zsh__") {
+        args.removeAt(0);
+        zsh = true;
+    }
+
     _Comp comp = _getCurrentCommand(pos, args);
     if (comp == null) {
-        result.addAll(tasks.keys);
+        result.addAll(_taskNames(tasks, zsh));
     }
     else if (comp.command != "+") {
         Map<String, dynamic> task = tasks[comp.command];
@@ -176,7 +202,7 @@ void completion(Map<String, Map> tasks, int pos, List<String> args) {
             List<String> paramArgs = _paramArgs(comp.args, task['options']);
             bool paramsDone = (paramArgs.length >= task['params'].length);
             if ((comp.word == null && paramsDone) || (comp.word != null && comp.word.startsWith("-")))
-                result.addAll(_completeOptions(task['options'], comp));
+                result.addAll(_completeOptions(task['options'], comp, zsh));
             else {
                 int paramIndex = _paramIndex(comp.args, task['options'], comp.index);
                 if (paramIndex < task['params'].length) {

@@ -1,0 +1,29 @@
+#compdef dake
+
+_dake() {
+
+    result=$(dake __completion__ $((CURRENT - 1)) __zsh__ ${words[@]:1})
+
+    result=$(echo "$result" | sed 's/:/\\:/g')
+
+    special=$(echo "$result" | egrep "::[a-z]+::$" > /dev/null ; echo $?);
+
+    if [[ $special == 0 ]]; then
+        special=$(echo "$result" | sed "s/::\(.\+\)::/\1/g")
+        case "$special" in
+            "file")
+                _files
+                ;;
+            "dir")
+                _files -/
+                ;;
+        esac
+        return 0
+    fi
+
+    if [[ "$result" != "" ]]; then
+        eval "_values description $result"
+    fi
+}
+
+_dake

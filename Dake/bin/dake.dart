@@ -53,6 +53,8 @@ void main(List<String> args) {
 
     _findDakeTasks().then((found) {
         if (!found) {
+            if (args.length >= 1 && args[0] == "__completion__")
+                exit(0);
             print("No DakeTasks.dart");
             exit(1);
         }
