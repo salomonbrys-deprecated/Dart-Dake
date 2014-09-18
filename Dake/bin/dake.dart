@@ -46,11 +46,12 @@ void main(List<String> args) {
                 exit(1);
             }
             Directory.current = path.dirname(argResult['file']);
-            _start(argResult.rest, path.basename(argResult['file']));
+            _start(argResult.rest, path.basename(argResult['file']), null);
         });
         return ;
     }
 
+    String basePath = Directory.current.path;
     _findDakeTasks().then((found) {
         if (!found) {
             if (args.length >= 1 && args[0] == "__completion__")
@@ -58,10 +59,16 @@ void main(List<String> args) {
             print("No DakeTasks.dart");
             exit(1);
         }
-        _checkAndStart(argResult.rest, "DakeTasks.dart");
+        _checkAndStart(argResult.rest, "DakeTasks.dart", basePath);
     });
 }
 
+/**
+ * Finds the closest DakeTasks.dart file in the directory tree
+ * and changes current directory to set it to the directory containing DakeTasks.dart
+ *
+ * Returns a future that completes with whether the DakeTasks.dart file has been found or not.
+ */
 Future<bool> _findDakeTasks() {
     var check;
     check = () {
@@ -77,17 +84,30 @@ Future<bool> _findDakeTasks() {
     return check();
 }
 
-void _checkAndStart(List<String> args, String file) {
+/**
+ * Checks that the packages directory exists and contains the package dake_tasks.
+ *
+ * If it does not, it will call _pubget to run pub get and install the dependencies.
+ */
+void _checkAndStart(List<String> args, String file, String basePath) {
+    void _recheck(_) {
+        if (!new Directory(Directory.current.path + "/packages/dake_tasks").existsSync()) {
+            print("No packages/dake_tasks directory, is dake_tasks declared in the pubspec.yaml dependencies?");
+            exit(1);
+        }
+        _start(args, file, basePath);
+    }
+
     if (!new Directory(Directory.current.path + "/packages").existsSync()) {
         print("No packages directory");
-        _pubget().then((_) => _start(args, file));
+        _pubget().then(_recheck);
     }
     else if (!new Directory(Directory.current.path + "/packages/dake_tasks").existsSync()) {
         print("No packages/dake_tasks directory");
-        _pubget().then((_) => _start(args, file));
+        _pubget().then(_recheck);
     }
     else
-        _start(args, file);
+        _start(args, file, basePath);
 }
 
 /**
@@ -124,7 +144,7 @@ Future _pubget() {
  *  3. Spawning an isolate that will run DakeTasks.dart and establishing a two way communication (SendPort/ReceivePort) with it
  *  4. Handling command line given tasks
  */
-_start(List<String> args, String file) {
+_start(List<String> args, String file, String basePath) {
 
     Uri taskFile = Uri.parse(Directory.current.path + "/" + file);
 
@@ -135,7 +155,7 @@ _start(List<String> args, String file) {
         receiveStream.first
         .then((Map result) {
             SendPort sendPort = result['sendPort'];
-            return handleTasks(sendPort, receiveStream, result['tasks'], args).then((_) => sendPort.send({}));
+            return handleTasks(sendPort, receiveStream, basePath, result['tasks'], args).then((_) => sendPort.send({}));
         })
         .then((_) => receivePort.close())
         ;

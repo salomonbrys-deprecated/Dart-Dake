@@ -19,7 +19,7 @@ import 'completion.dart';
  *
  * Returns a future that is completed once all tasks have been successfully executed.
  */
-Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tasks, List<String> allArgs) {
+Future handleTasks(SendPort sendPort, Stream receiveStream, String basePath, Map<String, Map> tasks, List<String> allArgs) {
     var parser = new ArgParser();
     _addParserTasks(parser, tasks);
 
@@ -51,7 +51,7 @@ Future handleTasks(SendPort sendPort, Stream receiveStream, Map<String, Map> tas
             exit(1);
         }
 
-        return execTask(sendPort, receiveStream, argResult.command, tasks[argResult.command.name]);
+        return execTask(sendPort, receiveStream, basePath, argResult.command, tasks[argResult.command.name]);
     }));
     return task;
 }

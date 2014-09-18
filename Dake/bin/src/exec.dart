@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:args/args.dart';
+import 'package:path/path.dart' as path;
 
 /**
  * Exception thrown if anything went wrong during the execution of a task.
@@ -27,7 +28,7 @@ class _DakeException implements Exception {
  *
  * This also checks that all required arguments are provided.
  */
-Map _makeRequest(ArgResults commandRes, Map task) {
+Map _makeRequest(ArgResults commandRes, Map task, String basePath) {
     var req = {
         'task': commandRes.name,
         'positional': [],
@@ -35,16 +36,18 @@ Map _makeRequest(ArgResults commandRes, Map task) {
     };
     var args = new List.from(commandRes.rest);
     task['params'].forEach((Map param) {
-        if (param['req'] == 'req' && args.isEmpty) {
+        if (param['req'] == 'req' && args.isEmpty)
             throw new _DakeException("Missing required argument ${param['name']}");
-        }
         if (!args.isEmpty) {
             String arg = args.removeAt(0);
             req['positional'].add(_argToType(param['type'], arg));
         }
     });
     task['options'].where((opt) => commandRes[opt['name']] != null).forEach((opt) {
-        req['named'][opt['name']] = commandRes[opt['name']];
+        if (basePath != null && ["file", "filedir", "path", "dir", "folder"].contains(opt['dispType']))
+            req['named'][opt['name']] = basePath + path.separator + commandRes[opt['name']];
+        else
+            req['named'][opt['name']] = commandRes[opt['name']];
     });
     return req;
 }
@@ -69,9 +72,9 @@ dynamic _argToType(String type, String arg) {
  *
  * Returns a future that is completed when the task has finished runing.
  */
-Future execTask(SendPort sendPort, Stream receiveStream, ArgResults commandRes, Map task) {
+Future execTask(SendPort sendPort, Stream receiveStream, String basePath, ArgResults commandRes, Map task) {
     try {
-        sendPort.send(_makeRequest(commandRes, task));
+        sendPort.send(_makeRequest(commandRes, task, basePath));
         Completer _completer = new Completer();
         receiveStream.first.then((bool ret) {
             if (ret)
