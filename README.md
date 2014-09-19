@@ -7,14 +7,17 @@ It is designed to allow dart applications to have their maintenance & build task
 
 ## Install Dake
 
-___TODO: Use Pubin___
+1. Install [Pub-Bin](https://github.com/SalomonBrys/dart-pub-bin)
+2. Run `pub-bin install dake`
 
 
 ## Use Dake
 
 You can use Dake to run tasks that are defined in a `DakeTasks.dart` file.
 
-To list all tasks available, simply run `dake` in the directory containing the `DakeTasks.dart` file. It will list all available tasks, there required arguments, optional arguments and named options.
+Dake supports auto-completion for both bash and zsh. Pub-bin should have installed the completion scripts. If not, they are available in [the Dake/tool directory](https://github.com/SalomonBrys/Dart-Dake/tree/master/Dake/tool).
+
+To list all tasks available, simply run `dake` in the directory containing the `DakeTasks.dart` file. It will list all available tasks, their required arguments, optional arguments and named options.
 
 To run a task, simply write `dake task-name arguments`. For example:
 
@@ -54,4 +57,6 @@ Finally, once all task classes have been defined, write the main function as fol
 
     main(args, replyTo) => DakeMain([list, of, task, classes], args, replyTo);
 
-#### [`dake_tasks` API Documentation](http://salomonbrys.github.io/Dart-dake/dartdoc/index.html#dake_tasks/dake_tasks)
+Note that setting @Param(type: 'file') or @Param(type: 'dir') will allow the bash and zsh autocompletion to complete the parameter / option with files.
+
+#### [`dake_tasks` API Documentation](http://www.dartdocs.org/documentation/dake_tasks/latest/index.html#dake_tasks/dake_tasks)
